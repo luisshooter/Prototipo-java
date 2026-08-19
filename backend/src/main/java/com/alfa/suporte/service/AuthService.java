@@ -110,7 +110,9 @@ public class AuthService {
                 usuario.getNome(),
                 usuario.getEmail(),
                 usuario.getPerfis().stream().map(Perfil::getNome).toList(),
-                usuario.getAvatarBase64()
+                usuario.getAvatarBase64(),
+                usuario.isPodeVerDashboard(),
+                usuario.isPodeCriarChamado()
         );
     }
 

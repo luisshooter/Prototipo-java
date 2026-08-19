@@ -58,6 +58,17 @@ export interface UsuarioAutenticado {
   email: string;
   perfis: Perfil[];
   avatarBase64: string | null;
+  podeVerDashboard: boolean;
+  podeCriarChamado: boolean;
+}
+
+export interface UsuarioAdmin {
+  id: number;
+  nome: string;
+  email: string;
+  perfis: Perfil[];
+  podeVerDashboard: boolean;
+  podeCriarChamado: boolean;
 }
 
 export interface ApiErrorBody {

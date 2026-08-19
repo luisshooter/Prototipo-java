@@ -72,7 +72,7 @@ class AutorizacaoIntegrationTest {
         mockMvc.perform(post("/api/tickets")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content("{\"titulo\":\"Teste\",\"codCliente\":1,\"codModulo\":1,\"dataAbertura\":\"2021-03-01\"}"))
                 .andExpect(status().isForbidden());
     }
 

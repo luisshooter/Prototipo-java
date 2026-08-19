@@ -33,7 +33,7 @@ export function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute exigirPermissao="dashboard">
                   <DashboardPage />
                 </ProtectedRoute>
               }

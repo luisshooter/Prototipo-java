@@ -4,13 +4,24 @@ import { useAuth } from "../../auth/AuthContext";
 import { PerfilModal } from "./PerfilModal";
 
 const LINKS = [
-  { to: "/dashboard", label: "Dashboard", icone: "M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6V11h-6v9Zm0-16v5h6V4h-6Z" },
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    icone: "M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6V11h-6v9Zm0-16v5h6V4h-6Z",
+    permissao: "dashboard" as const,
+  },
   { to: "/receitas", label: "Receitas", icone: "M4 12h16M4 12a8 8 0 1 1 16 0M4 12a8 8 0 0 0 16 0" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { usuario, sair } = useAuth();
+  const { usuario, sair, possuiPerfil } = useAuth();
   const [perfilAberto, setPerfilAberto] = useState(false);
+
+  const ehAdmin = possuiPerfil("ADMIN");
+  const linksVisiveis = LINKS.filter((link) => {
+    if (link.permissao === "dashboard") return ehAdmin || usuario?.podeVerDashboard;
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -34,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-0.5 px-3">
-          {LINKS.map((link) => (
+          {linksVisiveis.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}

@@ -15,7 +15,8 @@ export function DashboardPage() {
   const [mes, setMes] = useState(agora.getMonth() + 1);
   const [ano, setAno] = useState(agora.getFullYear());
   const [modalAberto, setModalAberto] = useState(false);
-  const { possuiPerfil } = useAuth();
+  const { usuario, possuiPerfil } = useAuth();
+  const podeCriarChamado = possuiPerfil("ADMIN") || Boolean(usuario?.podeCriarChamado);
 
   const dashboardQuery = useQuery({
     queryKey: ["dashboard", mes, ano],
@@ -55,7 +56,7 @@ export function DashboardPage() {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-display text-sm font-semibold text-slate-700">Chamados do período</h2>
-              {possuiPerfil("ADMIN") && (
+              {podeCriarChamado && (
                 <button
                   onClick={() => setModalAberto(true)}
                   className="rounded-lg bg-brand-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700"

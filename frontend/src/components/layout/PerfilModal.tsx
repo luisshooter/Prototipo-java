@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import { mensagemDeErro } from "../../api/client";
+import { PermissoesTab } from "./PermissoesTab";
 
 const TAMANHO_MAX_BYTES = 500 * 1024;
 
@@ -10,9 +11,11 @@ interface PerfilModalProps {
 }
 
 export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
-  const { usuario, atualizarPerfil } = useAuth();
+  const { usuario, atualizarPerfil, possuiPerfil } = useAuth();
   const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const ehAdmin = possuiPerfil("ADMIN");
 
+  const [aba, setAba] = useState<"perfil" | "permissoes">("perfil");
   const [nome, setNome] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -25,6 +28,7 @@ export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
       setAvatar(usuario?.avatarBase64 ?? null);
       setErro(null);
       setSucesso(false);
+      setAba("perfil");
     }
   }, [aberto, usuario]);
 
@@ -72,11 +76,15 @@ export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+      <div className={`w-full rounded-2xl bg-white p-6 shadow-xl transition-all ${ehAdmin ? "max-w-md" : "max-w-sm"}`}>
         <div className="mb-5 flex items-start justify-between">
           <div>
-            <h2 className="font-display text-lg font-semibold text-slate-800">Meu perfil</h2>
-            <p className="text-sm text-slate-500">Atualize seu nome e sua foto.</p>
+            <h2 className="font-display text-lg font-semibold text-slate-800">
+              {aba === "perfil" ? "Meu perfil" : "Permissões de usuários"}
+            </h2>
+            <p className="text-sm text-slate-500">
+              {aba === "perfil" ? "Atualize seu nome e sua foto." : "Quem vê o quê no console."}
+            </p>
           </div>
           <button
             onClick={aoFechar}
@@ -89,6 +97,32 @@ export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
           </button>
         </div>
 
+        {ehAdmin && (
+          <div className="mb-5 flex gap-1 rounded-lg bg-slate-100 p-1">
+            <button
+              type="button"
+              onClick={() => setAba("perfil")}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition ${
+                aba === "perfil" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Meu perfil
+            </button>
+            <button
+              type="button"
+              onClick={() => setAba("permissoes")}
+              className={`flex-1 rounded-md py-1.5 text-sm font-medium transition ${
+                aba === "permissoes" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Permissões
+            </button>
+          </div>
+        )}
+
+        {aba === "permissoes" ? (
+          <PermissoesTab />
+        ) : (
         <form onSubmit={aoSubmeter} className="space-y-5">
           <div className="flex flex-col items-center gap-3">
             <button
@@ -169,6 +203,7 @@ export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

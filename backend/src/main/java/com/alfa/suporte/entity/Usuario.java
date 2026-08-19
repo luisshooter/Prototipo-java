@@ -48,6 +48,12 @@ public class Usuario {
     @Column(name = "avatar_base64", columnDefinition = "TEXT")
     private String avatarBase64;
 
+    @Column(name = "pode_ver_dashboard", nullable = false)
+    private boolean podeVerDashboard = true;
+
+    @Column(name = "pode_criar_chamado", nullable = false)
+    private boolean podeCriarChamado = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "usuario_perfil",

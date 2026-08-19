@@ -4,10 +4,12 @@ import com.alfa.suporte.dto.CriarTicketRequest;
 import com.alfa.suporte.dto.DashboardResponse;
 import com.alfa.suporte.dto.TicketDTO;
 import com.alfa.suporte.service.DashboardService;
+import com.alfa.suporte.service.PermissaoService;
 import com.alfa.suporte.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,15 +25,18 @@ public class TicketController {
 
     private final DashboardService dashboardService;
     private final TicketService ticketService;
+    private final PermissaoService permissaoService;
 
     @GetMapping("/dashboard")
-    public DashboardResponse dashboard(@RequestParam Integer mes, @RequestParam Integer ano) {
+    public DashboardResponse dashboard(Authentication authentication, @RequestParam Integer mes, @RequestParam Integer ano) {
+        permissaoService.exigirVerDashboard(authentication.getName());
         return dashboardService.montarDashboard(mes, ano);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TicketDTO criar(@Valid @RequestBody CriarTicketRequest request) {
+    public TicketDTO criar(Authentication authentication, @Valid @RequestBody CriarTicketRequest request) {
+        permissaoService.exigirCriarChamado(authentication.getName());
         return ticketService.criar(request);
     }
 }

@@ -2,11 +2,11 @@ package com.alfa.suporte.dto;
 
 import java.util.List;
 
-public record UsuarioResumoDTO(
+public record UsuarioAdminDTO(
+        Long id,
         String nome,
         String email,
         List<String> perfis,
-        String avatarBase64,
         boolean podeVerDashboard,
         boolean podeCriarChamado
 ) {
