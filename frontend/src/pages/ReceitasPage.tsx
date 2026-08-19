@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AppShell } from "../components/layout/AppShell";
 import { StateMessage } from "../components/common/StateMessage";
+import { ReceitaCarousel } from "../components/receitas/ReceitaCarousel";
 import { buscarReceitas } from "../api/receitas";
 import { mensagemDeErro } from "../api/client";
 
@@ -61,30 +62,7 @@ export function ReceitasPage() {
           <p className="mb-4 text-sm text-slate-500">
             {mutation.data.count} receita{mutation.data.count === 1 ? "" : "s"} encontrada{mutation.data.count === 1 ? "" : "s"}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mutation.data.receitas.map((receita) => (
-              <a
-                key={receita.recipeId}
-                href={receita.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-slate-100">
-                  <img
-                    src={receita.imageUrl}
-                    alt={receita.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="line-clamp-2 font-display text-sm font-semibold text-slate-800">{receita.title}</h3>
-                  <p className="mt-1 text-xs text-slate-500">{receita.publisher}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <ReceitaCarousel receitas={mutation.data.receitas} />
         </>
       )}
 
