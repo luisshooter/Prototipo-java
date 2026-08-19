@@ -76,7 +76,11 @@ export function PerfilModal({ aberto, aoFechar }: PerfilModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
-      <div className={`w-full rounded-2xl bg-white p-6 shadow-xl transition-all ${ehAdmin ? "max-w-md" : "max-w-sm"}`}>
+      <div
+        className={`w-full rounded-2xl bg-white p-6 shadow-xl transition-all ${
+          aba === "permissoes" ? "max-w-xl" : ehAdmin ? "max-w-md" : "max-w-sm"
+        }`}
+      >
         <div className="mb-5 flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold text-slate-800">
