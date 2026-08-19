@@ -1,12 +1,12 @@
 # Central de Suporte ALFA — TST-FS-004
 
-Aplicação full stack para o teste técnico **TST-FS-004**: dashboard de chamados de suporte, busca de receitas via integração externa (forkify) e autenticação/autorização ponta a ponta.
+Projeto feito para o teste técnico **TST-FS-004**: um painel de chamados de suporte, busca de receitas usando uma API externa (forkify) e login com controle de acesso.
 
 ## Sumário
 
-- [Stack e justificativa](#stack-e-justificativa)
-- [Arquitetura](#arquitetura)
-- [Autenticação — método e justificativa](#autenticação--método-e-justificativa)
+- [Stack e por que escolhi cada uma](#stack-e-por-que-escolhi-cada-uma)
+- [Como o projeto tá organizado](#como-o-projeto-tá-organizado)
+- [Login — como funciona e por quê](#login--como-funciona-e-por-quê)
 - [Como rodar](#como-rodar)
 - [Variáveis de ambiente](#variáveis-de-ambiente)
 - [Credenciais de teste](#credenciais-de-teste)
@@ -14,94 +14,94 @@ Aplicação full stack para o teste técnico **TST-FS-004**: dashboard de chamad
 - [Documentação da API](#documentação-da-api)
 - [Testes automatizados](#testes-automatizados)
 - [Modelo de dados](#modelo-de-dados)
-- [Decisões e trade-offs](#decisões-e-trade-offs)
+- [Algumas decisões que tomei](#algumas-decisões-que-tomei)
 
-## Stack e justificativa
+## Stack e por que escolhi cada uma
 
 | Camada | Tecnologia | Por quê |
 |---|---|---|
-| Back-end | Java 21 + Spring Boot 3 | Stack mais adotada no mercado Java para APIs REST corporativas; ecossistema maduro (Security, Data JPA, Validation) |
-| Persistência | PostgreSQL + Flyway | SGBD robusto e gratuito; Flyway versiona o schema junto do código |
-| ORM | Spring Data JPA / Hibernate | Produtividade em CRUD, mapeamento das FKs cliente/módulo |
-| Autenticação | Spring Security + JJWT | Padrão de fato para JWT em Spring; permite validação centralizada via filtro |
-| Documentação | springdoc-openapi (Swagger UI) | Gera o contrato a partir do próprio código, sem divergência |
-| Front-end | React 18 + TypeScript + Vite | Tipagem forte reduz bugs de contrato com a API; Vite acelera o dev loop |
-| Estilo | TailwindCSS | Consistência visual sem CSS solto pelo projeto |
-| Estado de servidor | TanStack Query | Cache, deduplicação e estados de loading/erro sem boilerplate manual |
-| Gráficos | Recharts | Biblioteca React-first, leve o suficiente para dois gráficos de pizza |
+| Back-end | Java 21 + Spring Boot 3 | É a combinação mais usada no mercado pra API Java, então o ecossistema (Security, JPA, Validation) já resolve boa parte do trabalho |
+| Banco | PostgreSQL + Flyway | Banco robusto e gratuito; o Flyway guarda o histórico de mudanças do schema junto com o código |
+| ORM | Spring Data JPA / Hibernate | Agiliza o CRUD e o relacionamento entre cliente, módulo e ticket |
+| Login | Spring Security + JJWT | Combinação padrão pra JWT em Spring, permite checar a autenticação num lugar só |
+| Documentação | springdoc-openapi (Swagger UI) | O contrato da API é gerado a partir do próprio código, então nunca fica desatualizado |
+| Front-end | React 18 + TypeScript + Vite | Tipagem ajuda a pegar erro de contrato com a API antes de rodar; Vite deixa o dev bem rápido |
+| Estilo | TailwindCSS | Mantém a aparência consistente sem CSS espalhado pelo projeto |
+| Dados do servidor | TanStack Query | Cuida de cache, loading e erro sem precisar escrever isso na mão toda hora |
+| Gráficos | Recharts | Biblioteca simples o suficiente pra dois gráficos de pizza |
 
-## Arquitetura
+## Como o projeto tá organizado
 
-**Back-end** — três camadas, regra de negócio fora do controller:
-
-```
-controller/  → apresentação HTTP (validação de entrada, códigos de status)
-service/     → regra de negócio e orquestração (agrupamento em memória, auth)
-repository/  → acesso a dados (Spring Data JPA)
-client/      → acesso a serviços externos (forkify), isolado do controller
-security/    → filtro JWT, emissão/validação de token (ponto único de checagem)
-exception/   → handler global único, corpo de erro padronizado
-```
-
-**Front-end** — separação entre acesso a dados e apresentação:
+**Back-end** — dividido em camadas, a regra de negócio não fica no controller:
 
 ```
-api/         → chamadas HTTP isoladas (um módulo por recurso)
-auth/        → sessão, contexto de autenticação, proteção de rotas
-components/  → blocos de UI reutilizáveis (dashboard, layout, comuns)
-pages/       → telas, compõem components + api
+controller/  → recebe a requisição HTTP, valida entrada, devolve status certo
+service/     → onde a lógica de fato acontece (agrupamento em memória, login)
+repository/  → acesso ao banco (Spring Data JPA)
+client/      → chamada pro serviço externo (forkify), separado do controller
+security/    → filtro do JWT, emissão e validação do token
+exception/   → um lugar só cuidando de todo erro, resposta padronizada
 ```
 
-## Autenticação — método e justificativa
+**Front-end** — separa quem busca dado de quem mostra na tela:
 
-Escolha: **JWT stateless (access token) + refresh token opaco persistido (tabela `sessao`)**.
+```
+api/         → cada chamada HTTP fica isolada no seu próprio arquivo
+auth/        → sessão do usuário, contexto de login, proteção de rota
+components/  → pedaços de tela reutilizáveis
+pages/       → as telas em si, juntando components + api
+```
 
-- **Access token**: JWT assinado (HS256), validade curta (15 min). Validado em um único filtro (`JwtAuthenticationFilter`), sem consulta ao banco a cada requisição — barato e horizontalmente escalável.
-- **Refresh token**: string aleatória de alta entropia (`SecureRandom`, 256 bits). Apenas o **hash SHA-256** dele é gravado em `sessao.identificador_hash` — o valor em claro nunca é persistido. Isso permite:
-  - **Revogação real no logout** (`revogado_em` é marcado, o token para de funcionar imediatamente).
-  - **Rotação a cada renovação** (`POST /api/auth/refresh` revoga a sessão usada e emite uma nova — mitiga replay de refresh token roubado).
-  - Cobre o ciclo completo exigido: `EMITIDA → VÁLIDA → EXPIRADA → RENOVADA → REVOGADA`.
+## Login — como funciona e por quê
 
-Trade-off assumido: o access token em si não é revogável antes de expirar (é stateless por design). Isso é mitigado pela validade curta (15 min) — o pior caso de uso indevido de um access token vazado é uma janela de 15 minutos, e o refresh token (a credencial de longa duração) é revogável de verdade.
+Escolhi **JWT (token de acesso) + um refresh token guardado no banco**.
 
-Senhas: hash **BCrypt** (custo 10) com salt único por usuário — nunca texto claro ou hash rápido (MD5/SHA-1).
+- **Token de acesso**: um JWT assinado que dura só 15 minutos. Ele é conferido em um único filtro (`JwtAuthenticationFilter`), sem precisar consultar o banco a cada requisição — fica leve e escala bem.
+- **Refresh token**: uma string aleatória de alta entropia. Eu não guardo ela em texto puro no banco — só o **hash SHA-256** dela fica salvo. Com isso dá pra:
+  - **Derrubar a sessão de verdade no logout** (marco como revogado e ele para de funcionar na hora).
+  - **Trocar o token a cada renovação** (`POST /api/auth/refresh` invalida o antigo e cria um novo — se alguém roubar um refresh token usado, ele já não serve mais).
+  - Cobrir o ciclo que o enunciado pediu: `EMITIDA → VÁLIDA → EXPIRADA → RENOVADA → REVOGADA`.
 
-Autorização: dois perfis (`ADMIN`, `USER`) via `ROLE_*` do Spring Security, checados em um único ponto (`SecurityConfig`) — `POST /api/tickets` exige `ADMIN`, o restante exige apenas sessão válida.
+Um detalhe que assumi como troca consciente: o token de acesso em si não dá pra revogar antes de expirar (é assim que token stateless funciona). Por isso ele dura só 15 minutos — se vazar, a janela de uso indevido é pequena, e quem realmente protege a sessão a longo prazo é o refresh token, que sim pode ser revogado.
+
+Senha: uso **BCrypt** com salt por usuário — nunca texto puro nem hash rápido tipo MD5/SHA-1.
+
+Permissão: dois perfis (`ADMIN` e `USER`), checados num lugar só (`SecurityConfig`) — criar chamado exige `ADMIN`, o resto só pede estar logado.
 
 ## Como rodar
 
-### Opção 1 — Docker Compose (recomendado)
+### Opção 1 — Docker Compose (mais fácil)
 
-Requer Docker e Docker Compose.
+Precisa ter Docker instalado.
 
 ```bash
 docker compose up --build
 ```
 
-Isso sobe, nesta ordem: Postgres (com healthcheck) → back-end (roda as migrations Flyway e a carga de dados automaticamente ao iniciar) → front-end (Nginx servindo o build de produção).
+Isso sobe o Postgres, espera ele ficar pronto, sobe o back-end (que já roda as migrations e carrega os dados sozinho) e depois o front-end.
 
 - Front-end: http://localhost:3000
 - API: http://localhost:8080
-- Swagger UI: http://localhost:8080/docs
+- Swagger: http://localhost:8080/docs
 
-### Opção 2 — Execução manual
+### Opção 2 — Rodando na mão
 
-**Banco de dados** (via Docker, ou um Postgres local seu):
+**Banco** (via Docker, ou um Postgres que você já tenha):
 
 ```bash
 docker compose up db
 ```
 
-**Back-end** (requer JDK 21 e Maven):
+**Back-end** (precisa de JDK 21 e Maven):
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-O schema e a carga de dados (clientes, módulos, tickets de março/2021, perfis e usuários de teste) são aplicados automaticamente pelo Flyway na subida.
+O schema e os dados (clientes, módulos, tickets de março/2021, perfis e usuários de teste) são criados sozinhos assim que sobe, via Flyway.
 
-**Front-end** (requer Node 18+):
+**Front-end** (precisa de Node 18+):
 
 ```bash
 cd frontend
@@ -110,32 +110,32 @@ npm install
 npm run dev
 ```
 
-Acesse http://localhost:5173.
+Acessa em http://localhost:5173.
 
 ## Variáveis de ambiente
 
-**Back-end** (`backend/src/main/resources/application.yml`, todas com default de desenvolvimento — sobrescreva em produção):
+**Back-end** (em `backend/src/main/resources/application.yml` — já vem com valor padrão pra rodar local, troca em produção):
 
-| Variável | Descrição | Default (dev) |
+| Variável | O que é | Padrão (dev) |
 |---|---|---|
-| `DB_URL` | JDBC URL do Postgres | `jdbc:postgresql://localhost:5432/suporte` |
-| `DB_USER` / `DB_PASSWORD` | Credenciais do banco | `suporte` / `suporte` |
-| `JWT_SECRET` | Segredo de assinatura do JWT (mín. 32 caracteres) | valor de dev — **troque em produção** |
-| `JWT_ACCESS_EXPIRATION_MS` | Validade do access token | `900000` (15 min) |
-| `JWT_REFRESH_EXPIRATION_MS` | Validade do refresh token | `604800000` (7 dias) |
-| `CORS_ALLOWED_ORIGINS` | Origens liberadas (separadas por vírgula) | `http://localhost:5173` |
-| `FORKIFY_BASE_URL` | Endpoint da forkify-api | `https://forkify-api.herokuapp.com/api/search` |
-| `FORKIFY_TIMEOUT_MS` | Timeout da chamada externa | `5000` |
+| `DB_URL` | Endereço do Postgres | `jdbc:postgresql://localhost:5432/suporte` |
+| `DB_USER` / `DB_PASSWORD` | Login do banco | `suporte` / `suporte` |
+| `JWT_SECRET` | Segredo que assina o token (mín. 32 caracteres) | valor de dev — **troca em produção** |
+| `JWT_ACCESS_EXPIRATION_MS` | Quanto tempo o token de acesso dura | `900000` (15 min) |
+| `JWT_REFRESH_EXPIRATION_MS` | Quanto tempo o refresh token dura | `604800000` (7 dias) |
+| `CORS_ALLOWED_ORIGINS` | Quais origens podem chamar a API | `http://localhost:5173` |
+| `FORKIFY_BASE_URL` | Endereço da forkify-api | `https://forkify-api.herokuapp.com/api/search` |
+| `FORKIFY_TIMEOUT_MS` | Tempo limite pra essa chamada externa | `5000` |
 
-**Front-end** (`frontend/.env`, ver `.env.example`):
+**Front-end** (em `frontend/.env`, veja `.env.example`):
 
-| Variável | Descrição |
+| Variável | O que é |
 |---|---|
-| `VITE_API_URL` | URL base da API (nunca fica fixa no código) |
+| `VITE_API_URL` | Endereço da API — nunca fica escrito direto no código |
 
 ## Credenciais de teste
 
-Criadas automaticamente na carga inicial (Flyway):
+Já vêm criadas quando o banco sobe:
 
 | Perfil | E-mail | Senha |
 |---|---|---|
@@ -151,11 +151,11 @@ curl -X POST http://localhost:8080/api/auth/login \
   -d '{"email":"admin@alfa.com","senha":"Admin@123"}'
 # → { "accessToken": "...", "refreshToken": "...", "usuario": { ... } }
 
-# 2. Dashboard (qualquer usuário autenticado)
+# 2. Dashboard (qualquer usuário logado)
 curl http://localhost:8080/api/tickets/dashboard?mes=3&ano=2021 \
   -H "Authorization: Bearer <accessToken>"
 
-# 3. Criar chamado (exige perfil ADMIN)
+# 3. Criar chamado (só ADMIN)
 curl -X POST http://localhost:8080/api/tickets \
   -H "Authorization: Bearer <accessToken>" \
   -H "Content-Type: application/json" \
@@ -166,7 +166,7 @@ curl -X POST http://localhost:8080/api/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refreshToken":"<refreshToken>"}'
 
-# 5. Logout (revoga o refresh token no servidor)
+# 5. Logout (derruba o refresh token no servidor)
 curl -X POST http://localhost:8080/api/auth/logout \
   -H "Content-Type: application/json" \
   -d '{"refreshToken":"<refreshToken>"}'
@@ -174,7 +174,7 @@ curl -X POST http://localhost:8080/api/auth/logout \
 
 ## Documentação da API
 
-Swagger UI em http://localhost:8080/docs (JSON em `/api-docs`). Inclui o esquema de segurança Bearer — use o botão **Authorize** com o `accessToken` obtido no login.
+Swagger em http://localhost:8080/docs (o JSON cru fica em `/api-docs`). Tem o esquema de segurança configurado — usa o botão **Authorize** com o `accessToken` que você pegou no login.
 
 ## Testes automatizados
 
@@ -183,7 +183,7 @@ cd backend
 mvn test
 ```
 
-Cobrem a lógica crítica: agrupamento em memória do dashboard (`DashboardServiceTest`) e as regras de autorização — 401 sem credencial, 403 sem permissão, 201 para ADMIN (`AutorizacaoIntegrationTest`).
+Cobrem as partes mais importantes: o agrupamento em memória do dashboard (`DashboardServiceTest`) e as regras de permissão — sem login dá 401, sem permissão dá 403, ADMIN criando ticket dá 201 (`AutorizacaoIntegrationTest`).
 
 ## Modelo de dados
 
@@ -191,14 +191,14 @@ Cobrem a lógica crítica: agrupamento em memória do dashboard (`DashboardServi
 CLIENTE (1) ──< TICKET >── (1) MODULO
 
 USUARIO >──< PERFIL   (via usuario_perfil)
-USUARIO (1) ──< SESSAO   (refresh tokens / credenciais)
+USUARIO (1) ──< SESSAO   (refresh tokens / sessões)
 ```
 
-Scripts em `backend/src/main/resources/db/migration` (Flyway): schema de domínio, carga de clientes/módulos/tickets de março 2021, schema de identidade, carga de perfis e usuários de teste.
+Os scripts ficam em `backend/src/main/resources/db/migration` (Flyway): schema de domínio, carga de clientes/módulos/tickets de março 2021, schema de login e carga de perfis/usuários de teste.
 
-## Decisões e trade-offs
+## Algumas decisões que tomei
 
-- **Agrupamento por cliente/módulo em memória** (`DashboardService`): exigência do enunciado — a consulta ao banco retorna a lista de tickets do período (sem `GROUP BY`/`COUNT`) e o agrupamento é feito com `Stream.collect(groupingBy(...))` na camada de aplicação.
-- **Hash do refresh token com SHA-256** (não BCrypt): o refresh token já é um segredo de alta entropia gerado por `SecureRandom`, então não precisa de um algoritmo de derivação lento — precisa sim de um hash determinístico para permitir a busca por `identificador_hash` no `refresh`/`logout`. BCrypt (com salt aleatório) não permitiria essa busca direta. Senhas de usuário, essas sim, usam BCrypt.
-- **`networkMode: "always"` no TanStack Query**: evita que uma falsa detecção de "offline" pelo navegador (comum atrás de proxies/VPNs corporativos) deixe a tela presa em "carregando" — o erro de rede sempre chega à UI, com opção de tentar novamente.
-- **Front-end busca receitas via mutação (`useMutation`)**, não via `useQuery` automático: a busca é disparada pela ação do usuário (submeter o formulário), não por um efeito de montagem.
+- **Agrupamento por cliente/módulo em memória** (`DashboardService`): era uma exigência do enunciado — a busca no banco só traz a lista de tickets do período (sem `GROUP BY`/`COUNT`), e quem agrupa é o próprio código Java, usando Streams.
+- **Refresh token com SHA-256 em vez de BCrypt**: o refresh token já nasce aleatório e difícil de adivinhar, então não precisa de um algoritmo lento de senha — precisa sim de um hash que dê pra buscar direto no banco (BCrypt gera um salt diferente toda vez, então não dá pra fazer essa busca). Senha de usuário continua sendo BCrypt, só o refresh token usa SHA-256.
+- **`networkMode: "always"` no TanStack Query**: sem isso, se o navegador achar (errado) que tá offline — comum atrás de proxy ou VPN de empresa — a tela fica presa em "carregando" pra sempre. Com essa opção, o erro sempre aparece pro usuário, com botão de tentar de novo.
+- **Busca de receitas usa `useMutation`, não `useQuery`**: a busca só acontece quando o usuário aperta o botão, não sozinha quando a tela abre.
