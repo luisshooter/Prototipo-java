@@ -109,8 +109,21 @@ public class AuthService {
         return new UsuarioResumoDTO(
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getPerfis().stream().map(Perfil::getNome).toList()
+                usuario.getPerfis().stream().map(Perfil::getNome).toList(),
+                usuario.getAvatarBase64()
         );
+    }
+
+    @Transactional
+    public UsuarioResumoDTO atualizarPerfil(String email, String nome, String avatarBase64) {
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new CredencialInvalidaException("Credencial invalida"));
+
+        usuario.setNome(nome);
+        usuario.setAvatarBase64(avatarBase64);
+        usuarioRepository.save(usuario);
+
+        return paraResumo(usuario);
     }
 
     private String gerarTokenAleatorio() {

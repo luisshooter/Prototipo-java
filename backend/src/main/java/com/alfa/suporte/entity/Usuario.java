@@ -45,6 +45,9 @@ public class Usuario {
     @Column(name = "data_criacao", nullable = false)
     private Instant dataCriacao = Instant.now();
 
+    @Column(name = "avatar_base64", columnDefinition = "TEXT")
+    private String avatarBase64;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "usuario_perfil",

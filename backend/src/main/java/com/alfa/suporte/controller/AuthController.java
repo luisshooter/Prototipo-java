@@ -1,5 +1,6 @@
 package com.alfa.suporte.controller;
 
+import com.alfa.suporte.dto.AtualizarPerfilRequest;
 import com.alfa.suporte.dto.LoginRequest;
 import com.alfa.suporte.dto.LoginResponse;
 import com.alfa.suporte.dto.RefreshRequest;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,5 +44,10 @@ public class AuthController {
     @GetMapping("/me")
     public UsuarioResumoDTO me(Authentication authentication) {
         return authService.buscarPerfilAtual(authentication.getName());
+    }
+
+    @PatchMapping("/me")
+    public UsuarioResumoDTO atualizarPerfil(Authentication authentication, @Valid @RequestBody AtualizarPerfilRequest request) {
+        return authService.atualizarPerfil(authentication.getName(), request.nome(), request.avatarBase64());
     }
 }
