@@ -76,7 +76,17 @@ Um detalhe que assumi como troca consciente: o token de acesso em si não dá pr
 
 Senha: uso **BCrypt** com salt por usuário — nunca texto puro nem hash rápido tipo MD5/SHA-1.
 
-Permissão: dois perfis (`ADMIN` e `USER`), checados num lugar só (`SecurityConfig`) — criar chamado exige `ADMIN`, o resto só pede estar logado.
+Permissão: dois perfis (`ADMIN` e `USER`), checados num lugar só (`SecurityConfig`) — criar chamado exige `ADMIN` por padrão, o resto só pede estar logado.
+
+### Permissões finas, por usuário
+
+Em cima do perfil, existe uma camada extra: o ADMIN pode entrar em **Meu perfil → Permissões** e ligar ou desligar, usuário por usuário, o acesso ao dashboard e a permissão de criar chamado. ADMIN sempre tem acesso total, isso não muda.
+
+Os valores padrão (quando um usuário é criado) reproduzem exatamente o que o enunciado pede: qualquer autenticado vê o dashboard, só ADMIN cria chamado. Então as credenciais de teste (`admin@alfa.com` / `user@alfa.com`) se comportam do jeito documentado acima até alguém mexer nos toggles.
+
+A checagem é real no back-end (`PermissaoService`), não só esconde botão na tela — dá pra confirmar chamando a API direto com um token de usuário sem permissão e recebendo 403.
+
+Um detalhe de UX: o botão de criar chamado mora dentro da tela de dashboard. Se um usuário tiver "criar chamado" ligado mas "ver dashboard" desligado, ele consegue criar chamado pela API mas não tem onde clicar na interface — é uma combinação possível, só não muito útil na prática.
 
 ## Como rodar
 
