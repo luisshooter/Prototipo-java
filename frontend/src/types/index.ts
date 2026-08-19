@@ -36,6 +36,23 @@ export interface NovoTicketPayload {
   dataEncerramento?: string | null;
 }
 
+/** Formato exato devolvido pela API (snake_case, igual a forkify). */
+export interface ReceitaBruta {
+  publisher: string;
+  title: string;
+  source_url: string;
+  recipe_id: string;
+  image_url: string;
+  social_rank: number;
+  publisher_url: string;
+}
+
+export interface ReceitaRespostaBruta {
+  count: number;
+  receitas: ReceitaBruta[];
+}
+
+/** Formato usado nos componentes do front (camelCase). */
 export interface Receita {
   publisher: string;
   title: string;

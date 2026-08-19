@@ -95,8 +95,12 @@ Um detalhe de UX: o botão de criar chamado mora dentro da tela de dashboard. Se
 Precisa ter Docker instalado.
 
 ```bash
+cp .env.example .env
+# edite o .env e coloque um JWT_SECRET seu (qualquer string aleatória de 32+ caracteres)
 docker compose up --build
 ```
+
+Sem o `.env` com `JWT_SECRET` definido, o `docker compose up` para com um erro claro — de propósito, pra nenhum segredo real ficar versionado no repositório, nem um default de conveniência.
 
 Isso sobe o Postgres, espera ele ficar pronto, sobe o back-end (que já roda as migrations e carrega os dados sozinho) e depois o front-end.
 
@@ -116,6 +120,7 @@ docker compose up db
 
 ```bash
 cd backend
+export JWT_SECRET=troque-por-um-segredo-aleatorio-de-32-caracteres  # no Windows: set JWT_SECRET=...
 mvn spring-boot:run
 ```
 
@@ -134,13 +139,13 @@ Acessa em http://localhost:5173.
 
 ## Variáveis de ambiente
 
-**Back-end** (em `backend/src/main/resources/application.yml` — já vem com valor padrão pra rodar local, troca em produção):
+**Back-end** (em `backend/src/main/resources/application.yml`):
 
-| Variável | O que é | Padrão (dev) |
+| Variável | O que é | Padrão |
 |---|---|---|
 | `DB_URL` | Endereço do Postgres | `jdbc:postgresql://localhost:5432/suporte` |
 | `DB_USER` / `DB_PASSWORD` | Login do banco | `suporte` / `suporte` |
-| `JWT_SECRET` | Segredo que assina o token (mín. 32 caracteres) | valor de dev — **troca em produção** |
+| `JWT_SECRET` | Segredo que assina o token (mín. 32 caracteres) | **sem default — obrigatória**, a aplicação não sobe sem ela |
 | `JWT_ACCESS_EXPIRATION_MS` | Quanto tempo o token de acesso dura | `900000` (15 min) |
 | `JWT_REFRESH_EXPIRATION_MS` | Quanto tempo o refresh token dura | `604800000` (7 dias) |
 | `CORS_ALLOWED_ORIGINS` | Quais origens podem chamar a API | `http://localhost:5173` |

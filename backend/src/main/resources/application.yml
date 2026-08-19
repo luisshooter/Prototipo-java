@@ -21,7 +21,9 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dev-secret-troque-em-producao-minimo-32-caracteres-1234567890}
+    # sem fallback de proposito: sem JWT_SECRET definida, a aplicacao nao sobe
+    # (nenhum segredo fica versionado no repositorio, nem em dev)
+    secret: ${JWT_SECRET}
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
   cors:
