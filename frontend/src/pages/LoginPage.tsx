@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type CSSProperties, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { mensagemDeErro } from "../api/client";
@@ -12,17 +12,32 @@ const LOG_AMBIENTE = [
   "#0142  Vendas        SpaceX",
   "#0311  Expedição     Google",
   "#0069  Foguetes      Tesla",
+  "#0177  Expedição     Apple Inc.",
+  "#0288  Financeiro    SpaceX",
+  "#0053  Vendas        Microsoft",
+  "#0399  Foguetes      Google",
 ];
 
 export function LoginPage() {
   const { usuario, entrar } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const painelRef = useRef<HTMLDivElement>(null);
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+
+  function aoMoverMouseNoPainel(evento: ReactMouseEvent<HTMLDivElement>) {
+    const painel = painelRef.current;
+    if (!painel) return;
+    const retangulo = painel.getBoundingClientRect();
+    const x = ((evento.clientX - retangulo.left) / retangulo.width) * 100;
+    const y = ((evento.clientY - retangulo.top) / retangulo.height) * 100;
+    painel.style.setProperty("--spot-x", `${x}%`);
+    painel.style.setProperty("--spot-y", `${y}%`);
+  }
 
   if (usuario) {
     const destino = (location.state as { de?: string } | null)?.de ?? "/dashboard";
@@ -51,8 +66,30 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-ink-950 px-12 py-14 text-slate-300 lg:flex lg:flex-col lg:justify-between">
-        <div>
+      <div
+        ref={painelRef}
+        onMouseMove={aoMoverMouseNoPainel}
+        style={{ "--spot-x": "20%", "--spot-y": "15%" } as CSSProperties}
+        className="relative hidden overflow-hidden bg-ink-950 px-12 py-14 text-slate-300 lg:flex lg:flex-col lg:justify-between"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-40 transition-[background] duration-300"
+          style={{
+            background:
+              "radial-gradient(480px circle at var(--spot-x) var(--spot-y), rgba(45,212,196,0.18), transparent 65%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+
+        <div className="relative">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-500/15 text-brand-400">
               <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -71,12 +108,23 @@ export function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="mb-3 text-[11px] uppercase tracking-wider text-slate-500">Fluxo recente · somente leitura</p>
-          <div className="space-y-1.5 font-mono text-[12px] text-slate-500">
-            {LOG_AMBIENTE.map((linha) => (
-              <p key={linha}>{linha}</p>
-            ))}
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="mb-3 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-500">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-400" />
+            </span>
+            Fluxo recente · somente leitura
+          </p>
+          <div
+            className="h-[108px] overflow-hidden"
+            style={{ maskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)" }}
+          >
+            <div className="animate-ticket-stream space-y-1.5 font-mono text-[12px] text-slate-500">
+              {[...LOG_AMBIENTE, ...LOG_AMBIENTE].map((linha, indice) => (
+                <p key={`${linha}-${indice}`}>{linha}</p>
+              ))}
+            </div>
           </div>
         </div>
       </div>

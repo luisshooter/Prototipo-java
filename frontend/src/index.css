@@ -23,3 +23,36 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+@keyframes ticket-stream {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-ticket-stream {
+  animation: ticket-stream 22s linear infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0, 0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform: translate(var(--drift-x, 10px), var(--drift-y, -14px)) rotate(var(--rot, 0deg));
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow var(--dur, 7s) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticket-stream,
+  .animate-float-slow {
+    animation: none !important;
+  }
+}
