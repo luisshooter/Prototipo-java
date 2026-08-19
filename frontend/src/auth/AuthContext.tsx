@@ -10,6 +10,7 @@ interface AuthContextValue {
   entrar: (email: string, senha: string) => Promise<void>;
   sair: () => Promise<void>;
   possuiPerfil: (perfil: string) => boolean;
+  atualizarPerfil: (nome: string, avatarBase64: string | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -55,8 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return usuario?.perfis.includes(perfil as Perfil) ?? false;
   }
 
+  async function atualizarPerfil(nome: string, avatarBase64: string | null) {
+    const atualizado = await authApi.atualizarPerfil(nome, avatarBase64);
+    tokenStorage.atualizarUsuario(atualizado);
+    setUsuario(atualizado);
+  }
+
   const value = useMemo(
-    () => ({ usuario, carregando, entrar, sair, possuiPerfil }),
+    () => ({ usuario, carregando, entrar, sair, possuiPerfil, atualizarPerfil }),
     [usuario, carregando]
   );
 

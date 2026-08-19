@@ -57,6 +57,7 @@ export interface UsuarioAutenticado {
   nome: string;
   email: string;
   perfis: Perfil[];
+  avatarBase64: string | null;
 }
 
 export interface ApiErrorBody {

@@ -24,6 +24,9 @@ export const tokenStorage = {
     localStorage.setItem(CHAVE_ACCESS, accessToken);
     localStorage.setItem(CHAVE_REFRESH, refreshToken);
   },
+  atualizarUsuario(usuario: UsuarioAutenticado) {
+    localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
+  },
   limpar() {
     localStorage.removeItem(CHAVE_ACCESS);
     localStorage.removeItem(CHAVE_REFRESH);

@@ -21,3 +21,8 @@ export async function buscarUsuarioAtual(): Promise<UsuarioAutenticado> {
   const { data } = await api.get<UsuarioAutenticado>("/api/auth/me");
   return data;
 }
+
+export async function atualizarPerfil(nome: string, avatarBase64: string | null): Promise<UsuarioAutenticado> {
+  const { data } = await api.patch<UsuarioAutenticado>("/api/auth/me", { nome, avatarBase64 });
+  return data;
+}
