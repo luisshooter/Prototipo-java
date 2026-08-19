@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: suporte-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: suporte
+      POSTGRES_USER: suporte
+      POSTGRES_PASSWORD: suporte
+    ports:
+      - "5432:5432"
+    volumes:
+      - suporte-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suporte -d suporte"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  suporte-db-data:
