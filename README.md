@@ -6,6 +6,7 @@ Projeto feito para o teste técnico **TST-FS-004**: um painel de chamados de sup
 
 - [Stack e por que escolhi cada uma](#stack-e-por-que-escolhi-cada-uma)
 - [Como o projeto tá organizado](#como-o-projeto-tá-organizado)
+- [Tela de login e página 404](#tela-de-login-e-página-404)
 - [Login — como funciona e por quê](#login--como-funciona-e-por-quê)
 - [Como rodar](#como-rodar)
 - [Variáveis de ambiente](#variáveis-de-ambiente)
@@ -51,6 +52,15 @@ auth/        → sessão do usuário, contexto de login, proteção de rota
 components/  → pedaços de tela reutilizáveis
 pages/       → as telas em si, juntando components + api
 ```
+
+## Tela de login e página 404
+
+Duas telas ganharam um cuidado visual extra, pra fugir da cara padrão de formulário/erro genérico:
+
+- **Login**: o painel escuro do lado esquerdo mostra um "log de chamados" que rola em loop contínuo (com fade nas bordas pra não cortar feio) e um brilho sutil que segue o cursor do mouse pela tela.
+- **Página 404**: em vez de uma mensagem seca de erro, virou um "chamado #404" com efeito de inclinação 3D que reage à posição do mouse, e uns fragmentos de ticket flutuando ao redor com profundidades diferentes (parallax).
+
+As duas respeitam `prefers-reduced-motion` — quem desativa animação no sistema operacional não vê nenhum desses efeitos, só a versão estática.
 
 ## Login — como funciona e por quê
 
