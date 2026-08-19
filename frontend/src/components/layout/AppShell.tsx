@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { PerfilModal } from "./PerfilModal";
 
@@ -16,6 +16,8 @@ const LINKS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { usuario, sair, possuiPerfil } = useAuth();
   const [perfilAberto, setPerfilAberto] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const location = useLocation();
 
   const ehAdmin = possuiPerfil("ADMIN");
   const linksVisiveis = LINKS.filter((link) => {
@@ -23,9 +25,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     return true;
   });
 
+  const tituloPagina = linksVisiveis.find((link) => link.to === location.pathname)?.label ?? "ALFA Suporte";
+
   return (
     <div className="flex h-screen bg-slate-50">
-      <aside className="flex h-full w-60 shrink-0 flex-col overflow-y-auto bg-ink-950 text-slate-300">
+      {menuAberto && (
+        <div
+          aria-hidden
+          onClick={() => setMenuAberto(false)}
+          className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-60 shrink-0 flex-col overflow-y-auto bg-ink-950 text-slate-300 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          menuAberto ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex items-center gap-2.5 px-6 py-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-500/15 text-brand-400">
             <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -49,6 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink
               key={link.to}
               to={link.to}
+              onClick={() => setMenuAberto(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                   isActive
@@ -98,9 +115,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-8 py-8">{children}</div>
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+          <button
+            onClick={() => setMenuAberto(true)}
+            aria-label="Abrir menu"
+            className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" />
+            </svg>
+          </button>
+          <span className="font-display text-sm font-semibold text-slate-800">{tituloPagina}</span>
+        </header>
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+        </main>
+      </div>
 
       <PerfilModal aberto={perfilAberto} aoFechar={() => setPerfilAberto(false)} />
     </div>
