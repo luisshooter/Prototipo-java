@@ -6,7 +6,10 @@ import { ReceitaCarousel } from "../components/receitas/ReceitaCarousel";
 import { buscarReceitas } from "../api/receitas";
 import { mensagemDeErro } from "../api/client";
 
-const SUGESTOES = ["Pizza", "Lasanha", "Sushi", "Hambúrguer", "Tacos", "Bolo de chocolate"];
+// forkify indexa em ingles - sugestao precisa ser o termo que a API de fato aceita,
+// nao a traducao em portugues (testado contra a API: "lasagna"/"hamburger"/"cake"
+// retornam resultado, mas "lasanha"/"hamburguer"/"bolo de chocolate" nao)
+const SUGESTOES = ["Pizza", "Lasagna", "Sushi", "Hamburger", "Tacos", "Cake"];
 
 export function ReceitasPage() {
   const [prato, setPrato] = useState("");
@@ -37,7 +40,7 @@ export function ReceitasPage() {
         <input
           value={prato}
           onChange={(e) => setPrato(e.target.value)}
-          placeholder="Ex.: pizza, lasanha, salada…"
+          placeholder="Ex.: pizza, sushi, chicken… (busca em inglês)"
           className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
         />
         <button
