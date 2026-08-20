@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AppShell } from "../components/layout/AppShell";
 import { StateMessage } from "../components/common/StateMessage";
@@ -6,23 +6,18 @@ import { ReceitaCarousel } from "../components/receitas/ReceitaCarousel";
 import { buscarReceitas } from "../api/receitas";
 import { mensagemDeErro } from "../api/client";
 
-const PRATO_INICIAL = "Pizza";
 const SUGESTOES = ["Pizza", "Lasanha", "Sushi", "Hambúrguer", "Tacos", "Bolo de chocolate"];
 
 export function ReceitasPage() {
-  const [prato, setPrato] = useState(PRATO_INICIAL);
+  const [prato, setPrato] = useState("");
+  const [buscou, setBuscou] = useState(false);
 
   const mutation = useMutation({ mutationFn: buscarReceitas });
-
-  useEffect(() => {
-    // mostra algo assim que a tela abre, em vez de ficar vazia esperando o usuario digitar
-    mutation.mutate(PRATO_INICIAL);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function buscar(termo: string) {
     if (!termo.trim()) return;
     setPrato(termo);
+    setBuscou(true);
     mutation.mutate(termo.trim());
   }
 
@@ -94,6 +89,10 @@ export function ReceitasPage() {
           </p>
           <ReceitaCarousel receitas={mutation.data.receitas} />
         </>
+      )}
+
+      {!buscou && !mutation.isPending && (
+        <StateMessage variant="vazio" titulo="Busque um prato" descricao="Digite o nome de um prato acima ou escolha uma sugestão." />
       )}
     </AppShell>
   );
