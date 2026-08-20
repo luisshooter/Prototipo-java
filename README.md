@@ -134,6 +134,20 @@ npm run dev
 
 Acessa em http://localhost:5173.
 
+### Problema conhecido — Windows com pasta acentuada
+
+Se a pasta do projeto tiver acento no caminho (ex.: `Protótipo-java`), o `mvn spring-boot:run` pode falhar com `ClassNotFoundException: com.alfa.suporte.SuporteApiApplication` mesmo com o build ok — é um bug do plugin do Spring Boot ao montar o classpath num arquivo temporário em paths não-ASCII no Windows.
+
+Contorno: rodar o jar/classpath direto com `java`, sem passar pelo plugin:
+
+```bash
+cd backend
+mvn dependency:build-classpath -Dmdep.outputFile=cp.txt -q
+java -cp "target/classes;$(cat cp.txt)" com.alfa.suporte.SuporteApiApplication
+```
+
+(no PowerShell, troque `;` por `;` mesmo — já é o separador do Windows — e use `Get-Content cp.txt -Raw` no lugar de `cat`). Lembre de exportar o `JWT_SECRET` do `.env` antes, ou o app não sobe.
+
 ## Variáveis de ambiente
 
 **Back-end** (em `backend/src/main/resources/application.yml`):
