@@ -10,6 +10,20 @@ import { StateMessage } from "../components/common/StateMessage";
 import { buscarDashboard } from "../api/tickets";
 import { mensagemDeErro } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import type { Agrupamento, Ticket } from "../types";
+
+// re-agrupa em memoria (sem SQL) a partir dos tickets ja exibidos, pra os graficos
+// acompanharem qualquer filtro aplicado na lista (dia, mes, ano)
+function agruparPor(tickets: Ticket[], campo: "cliente" | "modulo"): Agrupamento[] {
+  const contagem = new Map<string, number>();
+  for (const ticket of tickets) {
+    const chave = ticket[campo];
+    contagem.set(chave, (contagem.get(chave) ?? 0) + 1);
+  }
+  return [...contagem.entries()]
+    .map(([nome, quantidade]) => ({ nome, quantidade }))
+    .sort((a, b) => b.quantidade - a.quantidade);
+}
 
 export function DashboardPage() {
   const agora = new Date();
@@ -68,8 +82,14 @@ export function DashboardPage() {
         return (
           <div className="space-y-6">
             <div className="grid gap-5 md:grid-cols-2">
-              <PieChartCard titulo="Chamados por cliente" dados={dashboardQuery.data.porCliente} />
-              <PieChartCard titulo="Chamados por módulo" dados={dashboardQuery.data.porModulo} />
+              <PieChartCard
+                titulo={diaFiltro ? "Chamados por cliente (dia)" : "Chamados por cliente"}
+                dados={agruparPor(ticketsExibidos, "cliente")}
+              />
+              <PieChartCard
+                titulo={diaFiltro ? "Chamados por módulo (dia)" : "Chamados por módulo"}
+                dados={agruparPor(ticketsExibidos, "modulo")}
+              />
             </div>
 
             <div>
