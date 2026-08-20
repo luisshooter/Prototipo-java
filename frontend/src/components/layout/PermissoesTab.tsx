@@ -187,15 +187,25 @@ function Toggle({ ligado, aoClicar, rotulo }: { ligado: boolean; aoClicar: () =>
       aria-pressed={ligado}
       aria-label={rotulo}
       title={rotulo}
-      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
-        ligado ? "bg-brand-600" : "bg-slate-300"
+      className={`group relative h-6 w-11 shrink-0 rounded-full transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-2 active:scale-95 ${
+        ligado
+          ? "bg-brand-600 shadow-inner shadow-brand-800/20"
+          : "bg-slate-200 ring-1 ring-inset ring-slate-200 hover:bg-slate-300"
       }`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-150 ${
-          ligado ? "translate-x-4" : "translate-x-0.5"
+        className={`absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-md transition-all duration-200 ease-out ${
+          ligado ? "translate-x-[22px]" : "translate-x-0.5"
         }`}
-      />
+      >
+        <svg viewBox="0 0 24 24" className={`h-3 w-3 transition-colors ${ligado ? "text-brand-600" : "text-slate-300"}`} fill="none">
+          {ligado ? (
+            <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+          ) : (
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
+          )}
+        </svg>
+      </span>
     </button>
   );
 }
@@ -203,12 +213,13 @@ function Toggle({ ligado, aoClicar, rotulo }: { ligado: boolean; aoClicar: () =>
 function TravaSempreAtiva() {
   return (
     <span
-      className="flex h-5 w-9 items-center justify-center rounded-full bg-brand-50 text-brand-400"
+      className="flex h-6 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-brand-50 to-brand-100/70 text-brand-500 ring-1 ring-inset ring-brand-200/80"
       title="Sempre ativo para o perfil ADMIN"
     >
-      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none">
-        <rect x="5" y="10" width="14" height="9" rx="2" stroke="currentColor" strokeWidth={2} />
-        <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none">
+        <rect x="5" y="10.5" width="14" height="8.5" rx="2" stroke="currentColor" strokeWidth={2} />
+        <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
+        <circle cx="12" cy="14.5" r="1.2" fill="currentColor" />
       </svg>
     </span>
   );
