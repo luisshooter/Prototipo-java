@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AppShell } from "../components/layout/AppShell";
 import { StateMessage } from "../components/common/StateMessage";
@@ -6,17 +6,29 @@ import { ReceitaCarousel } from "../components/receitas/ReceitaCarousel";
 import { buscarReceitas } from "../api/receitas";
 import { mensagemDeErro } from "../api/client";
 
+const PRATO_INICIAL = "Pizza";
+const SUGESTOES = ["Pizza", "Lasanha", "Sushi", "Hambúrguer", "Tacos", "Bolo de chocolate"];
+
 export function ReceitasPage() {
-  const [prato, setPrato] = useState("");
-  const [buscou, setBuscou] = useState(false);
+  const [prato, setPrato] = useState(PRATO_INICIAL);
 
   const mutation = useMutation({ mutationFn: buscarReceitas });
 
+  useEffect(() => {
+    // mostra algo assim que a tela abre, em vez de ficar vazia esperando o usuario digitar
+    mutation.mutate(PRATO_INICIAL);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function buscar(termo: string) {
+    if (!termo.trim()) return;
+    setPrato(termo);
+    mutation.mutate(termo.trim());
+  }
+
   function aoSubmeter(evento: FormEvent) {
     evento.preventDefault();
-    if (!prato.trim()) return;
-    setBuscou(true);
-    mutation.mutate(prato.trim());
+    buscar(prato);
   }
 
   return (
@@ -26,7 +38,7 @@ export function ReceitasPage() {
         <p className="mt-1 text-sm text-slate-500">Consulta em tempo real ao serviço externo forkify, via back-end.</p>
       </div>
 
-      <form onSubmit={aoSubmeter} className="mb-6 flex max-w-lg gap-2">
+      <form onSubmit={aoSubmeter} className="mb-4 flex max-w-lg gap-2">
         <input
           value={prato}
           onChange={(e) => setPrato(e.target.value)}
@@ -41,6 +53,24 @@ export function ReceitasPage() {
           {mutation.isPending ? "Buscando…" : "Buscar"}
         </button>
       </form>
+
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-slate-400">Mais buscados:</span>
+        {SUGESTOES.map((sugestao) => (
+          <button
+            key={sugestao}
+            type="button"
+            onClick={() => buscar(sugestao)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              prato === sugestao && mutation.isSuccess
+                ? "border-brand-200 bg-brand-50 text-brand-700"
+                : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700"
+            }`}
+          >
+            {sugestao}
+          </button>
+        ))}
+      </div>
 
       {mutation.isPending && <StateMessage variant="carregando" titulo="Consultando receitas…" />}
 
@@ -64,10 +94,6 @@ export function ReceitasPage() {
           </p>
           <ReceitaCarousel receitas={mutation.data.receitas} />
         </>
-      )}
-
-      {!buscou && !mutation.isPending && (
-        <StateMessage variant="vazio" titulo="Busque um prato" descricao="Digite o nome de um prato acima para ver receitas." />
       )}
     </AppShell>
   );
